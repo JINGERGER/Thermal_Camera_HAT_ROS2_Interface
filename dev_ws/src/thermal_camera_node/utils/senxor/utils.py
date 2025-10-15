@@ -10,7 +10,15 @@ from pathlib import Path
 import operator
 import numpy as np
 import cv2 as cv
-import cmapy
+
+# Try to import cmapy, but provide fallback if it fails with NumPy 2.x
+try:
+    import cmapy
+    CMAPY_AVAILABLE = True
+except (ImportError, AttributeError) as e:
+    print(f"Warning: cmapy import failed ({e}). Using fallback colormap implementation.")
+    CMAPY_AVAILABLE = False
+    cmapy = None
 from serial.tools import list_ports
 from serial import Serial, SerialException
 from senxor.mi48 import MI48
@@ -184,14 +192,30 @@ def get_colormap(colormap='rainbow2', nc=None):
         # use defualt opencv maps or explicitly defined above
         cmap = colormaps[colormap]
     except KeyError:
-        cmap = cmapy.cmap(colormap)
+        # Try to get colormap from cmapy if available
+        if CMAPY_AVAILABLE:
+            try:
+                cmap = cmapy.cmap(colormap)
+            except KeyError:
+                # Fallback to 'jet' if colormap not found
+                print(f"Warning: Colormap '{colormap}' not found, using 'jet' instead.")
+                cmap = cv.COLORMAP_JET
+        else:
+            # cmapy not available, use fallback
+            print(f"Warning: cmapy not available, colormap '{colormap}' not found, using 'jet' instead.")
+            cmap = cv.COLORMAP_JET
+    
     if nc is not None:
         # some names appear in both OpenCV (int), and Matplotlib (LUT)
         # attempt to pick up the one from Matplotlib
         if isinstance(cmap, int):
-            try:
-                cmap = cmapy.cmap(colormap)
-            except KeyError:
+            if CMAPY_AVAILABLE:
+                try:
+                    cmap = cmapy.cmap(colormap)
+                except KeyError:
+                    # return non-quantized CV cmap
+                    return cmap
+            else:
                 # return non-quantized CV cmap
                 return cmap
         # we need to create a LUT with 256 entries, and these entries

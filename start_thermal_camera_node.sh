@@ -1,9 +1,9 @@
+#!/bin/bash
 echo "Starting Thermal Camera HAT ROS2 Interface..."
 sudo /bin/chmod 777 /dev/ttyACM0
 echo "Permissions set for /dev/ttyACM0"
 echo "Starting ROS2 environment..."
-#!/bin/bash
-source /opt/ros/foxy/setup.bash
+source /opt/ros/humble/setup.bash
 echo "Sourcing ROS2 setup script..."
 source "$(dirname "$0")"/dev_ws/install/setup.bash
 echo "Starting thermal camera node..."

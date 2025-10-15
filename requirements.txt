@@ -5,5 +5,5 @@ numpy
 opencv-python
 pyserial
 crcmod
-matplotlib
-cmapy
+# matplotlib removed - causes compatibility issues with NumPy 2.x
+# cmapy removed - depends on matplotlib, using OpenCV colormaps instead

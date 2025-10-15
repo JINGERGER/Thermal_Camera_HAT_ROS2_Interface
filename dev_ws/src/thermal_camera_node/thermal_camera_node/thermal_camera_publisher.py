@@ -97,7 +97,8 @@ class ThermalCameraNode(Node):
 
         # 只发布原始最高温和最低温
         temp_msg = Float32MultiArray()
-        temp_msg.data = [min_temp, max_temp]
+        # Ensure proper float32 conversion for NumPy 2.x compatibility
+        temp_msg.data = [float(min_temp), float(max_temp)]
         self.temp_pub_.publish(temp_msg)
 
         frame = data_to_frame(data, (self.image_width, self.image_height), hflip=False)
@@ -120,7 +121,8 @@ class ThermalCameraNode(Node):
             msg.encoding = self.encoding
             msg.is_bigendian = 0
             msg.step = img_color.shape[1] * 3
-            msg.data = img_color.tobytes()
+            # Convert to list of integers for ROS2 compatibility
+            msg.data = list(img_color.tobytes())
             self.image_pub_.publish(msg)
         except Exception as e:
             self.get_logger().warn(f"cv2 colormap failed: {e}, fallback to mono8.")
@@ -131,7 +133,8 @@ class ThermalCameraNode(Node):
             msg.encoding = 'mono8'
             msg.is_bigendian = 0
             msg.step = img_data.shape[1]
-            msg.data = img_data.tobytes()
+            # Convert to list of integers for ROS2 compatibility
+            msg.data = list(img_data.tobytes())
             self.image_pub_.publish(msg)
 
 def main(args=None):
