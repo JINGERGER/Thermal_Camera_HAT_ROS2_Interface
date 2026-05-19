@@ -25,7 +25,9 @@ def generate_launch_description():
                     'start_with_header_enable': True,
                     'rolling_average_temperature_minimum_frame_size': 10,
                     'rolling_average_temperature_maximum_frame_size': 10,
-                    'use_opencv_filter': True
+                    'use_opencv_filter': True,
+                    'serial_port': '/dev/ttyACM0',
+                    'serial_timeout': 1.0,
                 }
                 ]
         )

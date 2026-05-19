@@ -10,7 +10,6 @@ from pathlib import Path
 import operator
 import numpy as np
 import cv2 as cv
-import cmapy
 from serial.tools import list_ports
 from serial import Serial, SerialException
 from senxor.mi48 import MI48
@@ -57,48 +56,66 @@ colormaps = {
     'ironbow': lut_ironbow[-256:],
 }
 
-def connect_senxor(src=None, name=None):
+def _open_mi48_on_device(device, name=None, serial_timeout=1.0):
+    """Open SenXor on a serial device path (e.g. /dev/ttyACM0 or COM6)."""
+    try:
+        ser = Serial(device, timeout=serial_timeout)
+    except SerialException as exc:
+        logging.warning('Cannot open %s: %s', device, exc)
+        return None, None
+    if name is None:
+        name = device
+    usb = USB_Interface(ser)
+    mi48 = MI48([usb, usb], name=name, read_raw=False)
+    return mi48, device
+
+
+def connect_senxor(src=None, name=None, serial_timeout=1.0):
     """
     Return an MI48 instance corresponding to the SenXor module connected to `src`
 
-    `src` can be either the name of a virtual comport, e.g. COM6, or a sequential
-    number, e.g. 0, 1, etc.
-    if `name` (stirng) is not None, it will be assigned to mi48.name instance, else
-    the name of the virtual comport will be assigned to the mi48.name.
+    `src` can be:
+      - a device path, e.g. /dev/ttyACM0
+      - a virtual COM name, e.g. COM6
+      - a sequential index, e.g. 0, 1, etc. (among VID/PID-matched ports)
+    if `name` is not None, it will be assigned to mi48.name; else the device path
+    or COM name is used.
 
     Return None, if no connection to SenXor can be established.
     """
+    if isinstance(src, str):
+        src = src.strip()
+        if not src:
+            src = None
+        elif src.startswith('/dev/') or src.upper().startswith('COM'):
+            mi48, connected = _open_mi48_on_device(
+                src, name=name, serial_timeout=serial_timeout)
+            return mi48, connected, [src]
+
     cam_index, port_name = None, None
     try:
         src = int(src)
         cam_index = src
-    except ValueError:
-        port_name = src.upper()
-    except TypeError:
-        pass
+    except (ValueError, TypeError):
+        if src is not None:
+            port_name = str(src).upper()
     mi48 = None
     connected_port = None
     port_names = []
     for p in list_ports.comports():
         if p.vid == MI_VID and p.pid in MI_PIDs:
-            port = p.description.split()[-1][1:-1]
-            port_names.append(port)
-            if port_name is not None and port_name != port: continue
-            if cam_index is not None and cam_index != len(port_names)-1: continue
-            try:
-                ser = Serial(p.device)
-            except SerialException:
-                # port already open
-                if port_name is not None:
-                    logging.warning(f'{port_name} seems already open')
-                if cam_index is not None:
-                    logging.warning(f'Thermal image source {cam_index}'
-                                     ' seems already open')
+            port_names.append(p.device)
+            label = p.description.split()[-1]
+            if len(label) >= 2 and label[0] == '(' and label[-1] == ')':
+                label = label[1:-1]
+            if port_name is not None and port_name not in (label.upper(), p.device.upper()):
                 continue
-            usb = USB_Interface(ser)
-            connected_port = port
-            if name is None: name = connected_port
-            mi48 = MI48([usb,usb], name=name, read_raw=False)
+            if cam_index is not None and cam_index != len(port_names) - 1:
+                continue
+            mi48, connected_port = _open_mi48_on_device(
+                p.device, name=name, serial_timeout=serial_timeout)
+            if mi48 is not None:
+                break
     return mi48, connected_port, port_names
 
 def data_to_frame(data, array_shape, hflip=False):
@@ -184,12 +201,14 @@ def get_colormap(colormap='rainbow2', nc=None):
         # use defualt opencv maps or explicitly defined above
         cmap = colormaps[colormap]
     except KeyError:
+        import cmapy
         cmap = cmapy.cmap(colormap)
     if nc is not None:
         # some names appear in both OpenCV (int), and Matplotlib (LUT)
         # attempt to pick up the one from Matplotlib
         if isinstance(cmap, int):
             try:
+                import cmapy
                 cmap = cmapy.cmap(colormap)
             except KeyError:
                 # return non-quantized CV cmap

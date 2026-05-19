@@ -31,12 +31,23 @@
 | rolling_average_temperature_minimum_frame_size | 10   | 最小温度滑动窗口帧数       |
 | rolling_average_temperature_maximum_frame_size | 10   | 最大温度滑动窗口帧数       |
 | use_opencv_filter                          | True     | 是否使用OpenCV滤波         |
+| serial_port                                | /dev/ttyACM0 | 串口设备路径           |
+| serial_timeout                             | 1.0      | 串口读超时（秒）           |
+
+## 话题
+
+| 话题 | 说明 |
+|------|------|
+| `/thermal_camera/image_raw` | 伪彩色图像 (bgr8) |
+| `/thermal_camera/min_max_temp` | `[min, max]` °C，滑动平均（与伪彩一致） |
+| `/thermal_camera/min_max_temp_instant` | `[min, max]` °C，当前帧瞬时 |
 
 ## 典型用法
 1. rviz2 彩色显示：添加 Image 显示，选择 `/thermal_camera/image_raw`，encoding 设为 bgr8。
 2. 订阅温度极值：
    ```bash
    ros2 topic echo /thermal_camera/min_max_temp
+   ros2 topic echo /thermal_camera/min_max_temp_instant
    ```
 
 ## 适用环境
