@@ -31,8 +31,17 @@
 | rolling_average_temperature_minimum_frame_size | 10   | 最小温度滑动窗口帧数       |
 | rolling_average_temperature_maximum_frame_size | 10   | 最大温度滑动窗口帧数       |
 | use_opencv_filter                          | True     | 是否使用OpenCV滤波         |
+| rotate_180                                | True     | 是否将输出图像旋转 180°（相机倒装时使用） |
 | serial_port                                | /dev/ttyACM0 | 串口设备路径           |
 | serial_timeout                             | 1.0      | 串口读超时（秒）           |
+| tf_parent_frame                            | gripperStator | 静态 TF 的 parent frame |
+| tf_child_frame                             | thermal_camera_optical_frame | 静态 TF 的 child frame |
+| tf_x                                      | 0.0      | 静态 TF 平移 X（米） |
+| tf_y                                      | 0.0      | 静态 TF 平移 Y（米） |
+| tf_z                                      | 0.05     | 静态 TF 平移 Z（米），默认在正上方约 5cm |
+| tf_roll                                   | 0.0      | 静态 TF 旋转 roll（弧度） |
+| tf_pitch                                  | 0.0      | 静态 TF 旋转 pitch（弧度） |
+| tf_yaw                                    | 0.0      | 静态 TF 旋转 yaw（弧度） |
 
 ## 话题
 

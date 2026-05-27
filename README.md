@@ -108,6 +108,15 @@ rviz2：添加 **Image**，Topic 选 `/thermal_camera/image_raw`，Encoding 选 
 | `rolling_average_temperature_minimum_frame_size` | 10 | 发布用最低温滑动窗口帧数 |
 | `rolling_average_temperature_maximum_frame_size` | 10 | 发布用最高温滑动窗口帧数 |
 | `use_opencv_filter` | True | 中值 + 双边滤波后再伪彩 |
+| `rotate_180` | True | 将输出图像旋转 180°（默认开启，适用于相机倒装/画面上下颠倒） |
+| `tf_parent_frame` | gripperStator | 静态 TF 的 parent frame |
+| `tf_child_frame` | thermal_camera_optical_frame | 静态 TF 的 child frame（与图像 `frame_id` 对齐） |
+| `tf_x` | 0.0 | 静态 TF 平移 X（米） |
+| `tf_y` | 0.0 | 静态 TF 平移 Y（米） |
+| `tf_z` | 0.05 | 静态 TF 平移 Z（米），默认在 `gripperStator` 正上方约 5cm |
+| `tf_roll` | 0.0 | 静态 TF 旋转 roll（弧度） |
+| `tf_pitch` | 0.0 | 静态 TF 旋转 pitch（弧度） |
+| `tf_yaw` | 0.0 | 静态 TF 旋转 yaw（弧度） |
 
 ## 目录结构
 

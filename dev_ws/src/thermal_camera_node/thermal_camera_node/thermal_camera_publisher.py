@@ -39,6 +39,7 @@ class ThermalCameraNode(Node):
         self.declare_parameter('rolling_average_temperature_minimum_frame_size', 10)
         self.declare_parameter('rolling_average_temperature_maximum_frame_size', 10)
         self.declare_parameter('use_opencv_filter', True)
+        self.declare_parameter('rotate_180', True)
         self.declare_parameter('serial_port', '/dev/ttyACM0')
         self.declare_parameter('serial_timeout', 1.0)
 
@@ -63,6 +64,7 @@ class ThermalCameraNode(Node):
         self.rolling_average_temperature_maximum_frame_size = self.get_parameter(
             'rolling_average_temperature_maximum_frame_size').value
         self.use_opencv_filter = self.get_parameter('use_opencv_filter').value
+        self.rotate_180 = self.get_parameter('rotate_180').value
         self.serial_port = self.get_parameter('serial_port').value
         self.serial_timeout = self.get_parameter('serial_timeout').value
 
@@ -166,6 +168,8 @@ class ThermalCameraNode(Node):
 
         try:
             img_color = cv2.applyColorMap(filt_uint8, cv2.COLORMAP_JET)
+            if self.rotate_180:
+                img_color = cv2.rotate(img_color, cv2.ROTATE_180)
             msg = Image()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = 'thermal_camera_optical_frame'
@@ -186,7 +190,10 @@ class ThermalCameraNode(Node):
             msg.encoding = 'mono8'
             msg.is_bigendian = 0
             msg.step = img_data.shape[1]
-            msg.data = filt_uint8.tobytes()
+            mono = filt_uint8
+            if self.rotate_180:
+                mono = cv2.rotate(mono, cv2.ROTATE_180)
+            msg.data = mono.tobytes()
             self.image_pub_.publish(msg)
 
     def destroy_node(self):
